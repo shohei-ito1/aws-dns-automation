@@ -7,7 +7,7 @@
 # 変数定義
 DOMAIN=$1
 DRY_RUN=$2  # --dry-run オプション
-AWS_REGION="us-east-1"  # CloudFront 用なら us-east-1
+AWS_REGION="ap-southeast-1"
 
 if [ -z "$DOMAIN" ]; then
   echo "Usage: $0 <domain> [--dry-run]"

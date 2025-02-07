@@ -8,7 +8,7 @@
 DOMAIN=$1
 ALB_NAME=$2
 DRY_RUN=$3  # --dry-run オプション
-AWS_REGION="us-east-1"  # 必要なら変更
+AWS_REGION="ap-southeast-1"  # 必要なら変更
 
 if [ -z "$DOMAIN" ] || [ -z "$ALB_NAME" ]; then
   echo "Usage: $0 <domain> <alb_name> [--dry-run]"
