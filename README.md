@@ -1,5 +1,6 @@
 # aws-dns-automation
 
+書き途中です
 ## example.com の場合
 ## sub.example.com に変更も可能
 

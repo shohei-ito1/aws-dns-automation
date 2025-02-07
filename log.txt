@@ -39,3 +39,18 @@ q-test.dev-hinode-labo.com.  IN  NS  [
     }
 }
 (base) ➜  aws-dns-automation git:(main) ✗ 
+
+
+
+$ sh ./step2_request_ssl.sh        q-test.dev-hinode-labo.com          
+Retrieving Hosted Zone ID for q-test.dev-hinode-labo.com...
+Using Hosted Zone ID: /hostedzone/Z099481211769RO8DD9YE
+Requesting SSL certificate for q-test.dev-hinode-labo.com...
+Certificate ARN: arn:aws:acm:ap-southeast-1:868441499966:certificate/239b49a9-69d9-4323-a8c4-19c77893dbf8
+Retrieving SSL validation CNAME record...
+Adding SSL validation record to Route 53...
+
+An error occurred (InvalidChangeBatch) when calling the ChangeResourceRecordSets operation: [RRSet with DNS name null. is not permitted in zone q-test.dev-hinode-labo.com., RRSet of type CNAME with DNS name null. is not permitted as it creates a CNAME loop in the zone.]
+SSL validation record added.
+SSL証明書の DNS 検証レコードを Route 53 に追加しました。
+証明書の ARN: arn:aws:acm:ap-southeast-1:868441499966:certificate/239b49a9-69d9-4323-a8c4-19c77893dbf8
