@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # ===============================
-# AWS Route 53 にホストゾーンを作成 (Dry-Run対応)
+# AWS Route 53 にホストゾーンを作成
 # ===============================
 
 DOMAIN=$1
-DRY_RUN=$2  # --dry-run オプション
+DRY_RUN=$2
 
 if [ -z "$DOMAIN" ]; then
   echo "Usage: $0 <domain> [--dry-run]"
@@ -41,5 +41,3 @@ echo "==========================="
 echo "以下のNSレコードを管理者に設定依頼してください:"
 echo "${DOMAIN}.  IN  NS  $NS_RECORDS"
 echo "==========================="
-
-
