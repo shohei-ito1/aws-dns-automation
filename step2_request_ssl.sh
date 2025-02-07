@@ -90,3 +90,5 @@ echo "SSL validation record added."
 echo "SSL証明書の DNS 検証レコードを Route 53 に追加しました。"
 echo "証明書の ARN: $CERT_ARN"
 
+
+

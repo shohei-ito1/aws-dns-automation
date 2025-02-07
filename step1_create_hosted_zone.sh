@@ -4,7 +4,6 @@
 # AWS Route 53 にホストゾーンを作成 (Dry-Run対応)
 # ===============================
 
-# 変数定義
 DOMAIN=$1
 DRY_RUN=$2  # --dry-run オプション
 
@@ -13,7 +12,6 @@ if [ -z "$DOMAIN" ]; then
   exit 1
 fi
 
-# Dry-Run モードなら、すべての AWS コマンドを表示して終了
 if [ "$DRY_RUN" == "--dry-run" ]; then
   echo "[Dry-Run] Hosted zone を作成するコマンド:"
   echo "aws route53 create-hosted-zone --name $DOMAIN --caller-reference \$(date +%s) --query 'HostedZone.Id' --output text"
@@ -23,8 +21,6 @@ if [ "$DRY_RUN" == "--dry-run" ]; then
 
   exit 0
 fi
-
-# ===== 本番実行 =====
 
 # ホストゾーンを作成
 echo "Creating Hosted Zone for $DOMAIN..."
@@ -45,4 +41,5 @@ echo "==========================="
 echo "以下のNSレコードを管理者に設定依頼してください:"
 echo "${DOMAIN}.  IN  NS  $NS_RECORDS"
 echo "==========================="
+
 
