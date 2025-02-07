@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===============================
-# Step1: AWS Route 53 にホストゾーンを作成 (Dry-Run対応)
+# AWS Route 53 にホストゾーンを作成 (Dry-Run対応)
 # ===============================
 
 # 変数定義
@@ -13,16 +13,21 @@ if [ -z "$DOMAIN" ]; then
   exit 1
 fi
 
+# コマンドを変数に格納
+CREATE_HOSTED_ZONE_CMD="aws route53 create-hosted-zone --name $DOMAIN --caller-reference \$(date +%s) --query 'HostedZone.Id' --output text"
+GET_HOSTED_ZONE_CMD="aws route53 get-hosted-zone --id <HOSTED_ZONE_ID> --query 'DelegationSet.NameServers' --output json"
+
+# Dry-Run モードならコマンドを表示して終了
 if [ "$DRY_RUN" == "--dry-run" ]; then
   echo "[Dry-Run] Hosted zone を作成するコマンド:"
-  echo "aws route53 create-hosted-zone --name $DOMAIN --caller-reference \$(date +%s) --query 'HostedZone.Id' --output text"
+  echo "$CREATE_HOSTED_ZONE_CMD"
   echo "[Dry-Run] Hosted zone の情報を取得するコマンド:"
-  echo "aws route53 get-hosted-zone --id <HOSTED_ZONE_ID> --query 'DelegationSet.NameServers' --output json"
+  echo "$GET_HOSTED_ZONE_CMD"
   exit 0
 fi
 
-# Route 53 にホストゾーンを作成
-HOSTED_ZONE_ID=$(aws route53 create-hosted-zone --name $DOMAIN --caller-reference $(date +%s) --query 'HostedZone.Id' --output text)
+# 実際にホストゾーンを作成
+HOSTED_ZONE_ID=$(eval $CREATE_HOSTED_ZONE_CMD)
 
 if [ -z "$HOSTED_ZONE_ID" ]; then
   echo "Failed to create hosted zone."

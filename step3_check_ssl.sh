@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===============================
-# Step2-2: SSL証明書の検証完了を待機
+# SSL証明書の検証完了を待機 (Dry-Run対応)
 # ===============================
 
 # 変数定義
@@ -14,9 +14,13 @@ if [ -z "$CERT_ARN" ]; then
   exit 1
 fi
 
+# 証明書の検証ステータスを確認するコマンド
+CHECK_CERT_STATUS_CMD="aws acm describe-certificate --certificate-arn $CERT_ARN --region $AWS_REGION --query 'Certificate.Status' --output text"
+
+# Dry-Run モードならコマンドを表示して終了
 if [ "$DRY_RUN" == "--dry-run" ]; then
   echo "[Dry-Run] 証明書の検証ステータスを確認するコマンド:"
-  echo "aws acm describe-certificate --certificate-arn $CERT_ARN --region $AWS_REGION --query 'Certificate.Status' --output text"
+  echo "$CHECK_CERT_STATUS_CMD"
   exit 0
 fi
 
@@ -25,7 +29,7 @@ fi
 # ===============================
 echo "Waiting for SSL certificate to be issued..."
 while true; do
-  CERT_STATUS=$(aws acm describe-certificate --certificate-arn $CERT_ARN --region $AWS_REGION --query 'Certificate.Status' --output text)
+  CERT_STATUS=$(eval $CHECK_CERT_STATUS_CMD)
 
   echo "Current certificate status: $CERT_STATUS"
 
