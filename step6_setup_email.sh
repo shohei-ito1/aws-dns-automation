@@ -6,26 +6,11 @@
 
 # Variable Definitions
 DOMAIN=$1
-DRY_RUN=$2  # --dry-run option
 AWS_REGION="ap-southeast-1"
 
 if [ -z "$DOMAIN" ]; then
-  echo "Usage: $0 <domain> [--dry-run]"
+  echo "Usage: $0 <domain>"
   exit 1
-fi
-
-# If Dry-Run mode is enabled, display AWS commands and exit
-if [ "$DRY_RUN" == "--dry-run" ]; then
-  echo "[Dry-Run] SES domain verification command:"
-  echo "aws ses verify-domain-identity --domain $DOMAIN --region $AWS_REGION"
-
-  echo "[Dry-Run] SES DKIM setup command:"
-  echo "aws ses verify-domain-dkim --domain $DOMAIN --query 'DkimTokens' --output json --region $AWS_REGION"
-
-  echo "[Dry-Run] Add DKIM, SPF, DMARC, and MX records to Route 53:"
-  echo "aws route53 change-resource-record-sets --hosted-zone-id <HOSTED_ZONE_ID> --change-batch '{JSON configuration}' --region $AWS_REGION"
-
-  exit 0
 fi
 
 # ===== Execute in Production Mode =====
@@ -86,4 +71,3 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "SPF, DMARC, MX, and DKIM records added to Route 53."
-

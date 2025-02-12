@@ -1,27 +1,16 @@
 #!/bin/bash
 
 # ===============================
-# Check SSL Certificate Issuance Status (Dry-Run Supported)
+# Check SSL Certificate Issuance Status
 # ===============================
 
 # Variable Definitions
 DOMAIN=$1
-DRY_RUN=$2  # --dry-run option
 AWS_REGION="ap-southeast-1"
 
 if [ -z "$DOMAIN" ]; then
-  echo "Usage: $0 <domain> [--dry-run]"
+  echo "Usage: $0 <domain>"
   exit 1
-fi
-
-# If Dry-Run mode is enabled, display AWS commands and exit
-if [ "$DRY_RUN" == "--dry-run" ]; then
-  echo "[Dry-Run] Command to retrieve certificate ARN:"
-  echo "aws acm list-certificates --region $AWS_REGION --query \"CertificateSummaryList[?DomainName=='$DOMAIN'].CertificateArn | [0]\" --output text"
-
-  echo "[Dry-Run] Command to check certificate validation status:"
-  echo "aws acm describe-certificate --certificate-arn <CERT_ARN> --region $AWS_REGION --query 'Certificate.Status' --output text"
-  exit 0
 fi
 
 # ===============================
