@@ -38,7 +38,7 @@ CERT_VALIDATION_RECORDS=$(aws acm describe-certificate --certificate-arn "$CERT_
 for record in $(echo "$CERT_VALIDATION_RECORDS" | jq -c '.[]'); do
   VALIDATION_NAME=$(echo "$record" | jq -r '.Name')
   VALIDATION_VALUE=$(echo "$record" | jq -r '.Value')
-  
+
   aws route53 change-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --change-batch "{
     \"Changes\": [{
       \"Action\": \"UPSERT\",

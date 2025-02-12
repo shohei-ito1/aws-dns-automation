@@ -5,7 +5,6 @@
 # ===============================
 
 DOMAIN=$1
-DRY_RUN=$2
 AWS_REGION="ap-southeast-1"
 
 if [ -z "$DOMAIN" ]; then
@@ -23,15 +22,29 @@ fi
 
 echo "hosted_zone_id=$HOSTED_ZONE_ID"
 
-# 追加するドメインリスト
-EXTRA_DOMAINS=("sub2.XXX.com" "another-sub.XXX.com" "new.example.com")
+# 追加するドメインリスト（スクリプト引数から取得）
+EXTRA_DOMAINS=("${@:2}")
 
+# SANパラメータの処理（EXTRA_DOMAINS が空かどうか）
+if [ "${#EXTRA_DOMAINS[@]}" -gt 0 ]; then
+  SAN_PARAM="--subject-alternative-names ${EXTRA_DOMAINS[@]}"
+else
+  SAN_PARAM=""
+fi
+
+# 証明書のリクエスト
 CERT_ARN=$(aws acm request-certificate \
   --domain-name "$DOMAIN" \
-  --subject-alternative-names "${EXTRA_DOMAINS[@]}" \
+  $SAN_PARAM \
   --validation-method DNS \
   --region "$AWS_REGION" \
-  --query 'CertificateArn' --output text)
+  --query 'CertificateArn' --output text 2>&1)
+
+# エラーハンドリング
+if [[ "$CERT_ARN" == *"InvalidInputException"* ]]; then
+  echo "error=invalid_input, domain=$DOMAIN"
+  exit 1
+fi
 
 if [ -z "$CERT_ARN" ] || [ "$CERT_ARN" == "None" ]; then
   echo "error=failed_to_request_ssl_certificate, domain=$DOMAIN"
