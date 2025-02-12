@@ -34,7 +34,8 @@ if [ "$DRY_RUN" == "--dry-run" ]; then
   echo "aws elbv2 describe-listeners --load-balancer-arn <ALB_ARN> --query \"Listeners[?Protocol=='HTTPS'].ListenerArn | [0]\" --output text"
 
   echo "[Dry-Run] ACM 証明書の ARN を適用するコマンド:"
-  echo "aws elbv2 modify-listener --listener-arn <LISTENER_ARN> --certificates CertificateArn=<CERT_ARN> --region $AWS_REGION"
+  echo "aws elbv2 modify-listener --listener-arn"
+
 
   echo "[Dry-Run] Route 53 に ALB の A レコードを追加するコマンド:"
   echo "aws route53 change-resource-record-sets --hosted-zone-id <HOSTED_ZONE_ID> --change-batch '{\"Changes\":[{\"Action\":\"CREATE\",\"ResourceRecordSet\":{\"Name\":\"$DOMAIN\",\"Type\":\"A\",\"AliasTarget\":{\"HostedZoneId\":\"<ALB_HOSTED_ZONE_ID>\",\"DNSName\":\"<ALB_DNS_NAME>\",\"EvaluateTargetHealth\":true}}}]}'"
@@ -102,7 +103,8 @@ echo "Using existing HTTPS Listener ARN: $LISTENER_ARN"
 
 # 既存の HTTPS リスナーに新しい証明書を適用
 echo "Applying SSL Certificate to ALB HTTPS Listener..."
-aws elbv2 modify-listener --listener-arn $LISTENER_ARN --certificates CertificateArn=$CERT_ARN --region $AWS_REGION
+aws elbv2 modify-listener --listener-arn "$LISTENER_ARN" --certificates "CertificateArn=$CERT_ARN,CertificateArn=$SAN_CERT_ARN" --region "$AWS_REGION"
+
 
 echo "SSL Certificate applied successfully."
 

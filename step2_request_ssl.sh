@@ -23,8 +23,15 @@ fi
 
 echo "hosted_zone_id=$HOSTED_ZONE_ID"
 
-# SSL証明書のリクエスト
-CERT_ARN=$(aws acm request-certificate --domain-name "$DOMAIN" --validation-method DNS --region "$AWS_REGION" --query 'CertificateArn' --output text)
+# 追加するドメインリスト
+EXTRA_DOMAINS=("sub2.XXX.com" "another-sub.XXX.com" "new.example.com")
+
+CERT_ARN=$(aws acm request-certificate \
+  --domain-name "$DOMAIN" \
+  --subject-alternative-names "${EXTRA_DOMAINS[@]}" \
+  --validation-method DNS \
+  --region "$AWS_REGION" \
+  --query 'CertificateArn' --output text)
 
 if [ -z "$CERT_ARN" ] || [ "$CERT_ARN" == "None" ]; then
   echo "error=failed_to_request_ssl_certificate, domain=$DOMAIN"

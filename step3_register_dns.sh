@@ -32,22 +32,26 @@ fi
 
 echo "certificate_arn=$CERT_ARN"
 
-# CNAME 検証レコードを取得（最大 10 回リトライ）
-for i in {1..10}; do
-  echo "Attempt $i: Retrieving SSL validation CNAME record..."
-  CERT_VALIDATION_RECORDS=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" --region "$AWS_REGION" --query 'Certificate.DomainValidationOptions[0].ResourceRecord' --output json)
+# SAN 証明書の全てのドメインに対する CNAME レコードを取得
+CERT_VALIDATION_RECORDS=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" --region "$AWS_REGION" --query 'Certificate.DomainValidationOptions[*].ResourceRecord' --output json)
 
-  VALIDATION_NAME=$(echo "$CERT_VALIDATION_RECORDS" | jq -r '.Name // empty' | sed 's/\.$//')
-  VALIDATION_VALUE=$(echo "$CERT_VALIDATION_RECORDS" | jq -r '.Value // empty')
-
-  if [ -n "$VALIDATION_NAME" ] && [ -n "$VALIDATION_VALUE" ]; then
-    echo "Validation record found!"
-    break
-  fi
-
-  echo "CNAME record not yet available. Waiting for 30 seconds..."
-  sleep 30
+for record in $(echo "$CERT_VALIDATION_RECORDS" | jq -c '.[]'); do
+  VALIDATION_NAME=$(echo "$record" | jq -r '.Name')
+  VALIDATION_VALUE=$(echo "$record" | jq -r '.Value')
+  
+  aws route53 change-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --change-batch "{
+    \"Changes\": [{
+      \"Action\": \"UPSERT\",
+      \"ResourceRecordSet\": {
+        \"Name\": \"$VALIDATION_NAME\",
+        \"Type\": \"CNAME\",
+        \"TTL\": 300,
+        \"ResourceRecords\": [{\"Value\": \"$VALIDATION_VALUE\"}]
+      }
+    }]
+  }"
 done
+
 
 if [ -z "$VALIDATION_NAME" ] || [ -z "$VALIDATION_VALUE" ]; then
   echo "error=failed_to_retrieve_cname_records, certificate_arn=$CERT_ARN"
