@@ -1,5 +1,0 @@
-aws acm request-certificate \
-    --domain-name example.com \
-    --validation-method DNS \
-    --region ap-southeast-1
-
