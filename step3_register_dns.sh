@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===============================
-# SSL 証明書の DNS 検証用 CNAME を登録
+# Register SSL Certificate DNS Validation CNAME
 # ===============================
 
 DOMAIN=$1
@@ -12,7 +12,7 @@ if [ -z "$DOMAIN" ]; then
   exit 1
 fi
 
-# Route 53 の Hosted Zone ID を取得
+# Retrieve Route 53 Hosted Zone ID
 HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "$DOMAIN" --query "HostedZones[0].Id" --output text)
 
 if [ -z "$HOSTED_ZONE_ID" ] || [ "$HOSTED_ZONE_ID" == "None" ]; then
@@ -22,7 +22,7 @@ fi
 
 echo "hosted_zone_id=$HOSTED_ZONE_ID"
 
-# ACM 証明書の ARN を取得
+# Retrieve ACM Certificate ARN
 CERT_ARN=$(aws acm list-certificates --region "$AWS_REGION" --query "CertificateSummaryList[?DomainName=='$DOMAIN'].CertificateArn | [0]" --output text)
 
 if [ -z "$CERT_ARN" ] || [ "$CERT_ARN" == "None" ]; then
@@ -32,7 +32,7 @@ fi
 
 echo "certificate_arn=$CERT_ARN"
 
-# SAN 証明書の全てのドメインに対する CNAME レコードを取得
+# Retrieve CNAME records for SAN validation
 CERT_VALIDATION_RECORDS=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" --region "$AWS_REGION" --query 'Certificate.DomainValidationOptions[*].ResourceRecord' --output json)
 
 for record in $(echo "$CERT_VALIDATION_RECORDS" | jq -c '.[]'); do
@@ -52,7 +52,6 @@ for record in $(echo "$CERT_VALIDATION_RECORDS" | jq -c '.[]'); do
   }"
 done
 
-
 if [ -z "$VALIDATION_NAME" ] || [ -z "$VALIDATION_VALUE" ]; then
   echo "error=failed_to_retrieve_cname_records, certificate_arn=$CERT_ARN"
   exit 1
@@ -61,7 +60,7 @@ fi
 echo "validation_name=$VALIDATION_NAME"
 echo "validation_value=$VALIDATION_VALUE"
 
-# Route 53 に CNAME レコードを追加
+# Add CNAME record to Route 53
 echo "Adding SSL validation record to Route 53..."
 aws route53 change-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --change-batch '{
   "Changes": [{
@@ -81,5 +80,4 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "SSL validation record added successfully."
-echo "✅ Route 53 に CNAME を登録しました。"
 

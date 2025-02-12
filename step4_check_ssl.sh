@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # ===============================
-# SSL証明書の発行ステータス確認 (Dry-Run対応)
+# Check SSL Certificate Issuance Status (Dry-Run Supported)
 # ===============================
 
-# 変数定義
+# Variable Definitions
 DOMAIN=$1
-DRY_RUN=$2  # --dry-run オプション
+DRY_RUN=$2  # --dry-run option
 AWS_REGION="ap-southeast-1"
 
 if [ -z "$DOMAIN" ]; then
@@ -14,31 +14,31 @@ if [ -z "$DOMAIN" ]; then
   exit 1
 fi
 
-# Dry-Run モードなら、AWS コマンドを表示して終了
+# If Dry-Run mode is enabled, display AWS commands and exit
 if [ "$DRY_RUN" == "--dry-run" ]; then
-  echo "[Dry-Run] 証明書の ARN を取得するコマンド:"
+  echo "[Dry-Run] Command to retrieve certificate ARN:"
   echo "aws acm list-certificates --region $AWS_REGION --query \"CertificateSummaryList[?DomainName=='$DOMAIN'].CertificateArn | [0]\" --output text"
 
-  echo "[Dry-Run] 証明書の検証ステータスを確認するコマンド:"
+  echo "[Dry-Run] Command to check certificate validation status:"
   echo "aws acm describe-certificate --certificate-arn <CERT_ARN> --region $AWS_REGION --query 'Certificate.Status' --output text"
   exit 0
 fi
 
 # ===============================
-# SSL証明書の ARN を取得
+# Retrieve SSL Certificate ARN
 # ===============================
 echo "Retrieving SSL certificate ARN for $DOMAIN..."
 CERT_ARN=$(aws acm list-certificates --region "$AWS_REGION" --query "CertificateSummaryList[?DomainName=='$DOMAIN'].CertificateArn | [0]" --output text)
 
 if [ -z "$CERT_ARN" ] || [ "$CERT_ARN" == "None" ]; then
-  echo "❌ Error: SSL証明書が見つかりません。まだリクエストされていないか、ACM に登録されていません。"
+  echo "Error: SSL certificate not found. It may not have been requested or is not registered in ACM."
   exit 1
 fi
 
 echo "Found Certificate ARN: $CERT_ARN"
 
 # ===============================
-# SSL証明書のステータス確認
+# Check SSL Certificate Status
 # ===============================
 
 echo "Checking SSL certificate status for $CERT_ARN..."
@@ -48,14 +48,14 @@ CERT_STATUS=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" --regio
 echo "Current certificate status: $CERT_STATUS"
 
 if [ "$CERT_STATUS" == "ISSUED" ]; then
-  echo "✅ SSL証明書は正常に発行されています！ 🎉"
+  echo "SSL certificate has been successfully issued!"
   exit 0
 elif [ "$CERT_STATUS" == "FAILED" ]; then
-  echo "❌ Error: SSL証明書の発行に失敗しました。"
+  echo "Error: SSL certificate issuance failed."
   exit 1
 else
-  echo "⏳ まだSSL証明書が発行されていません (現在のステータス: $CERT_STATUS)。"
-  echo "後で再度実行してください。"
+  echo "SSL certificate has not been issued yet (Current status: $CERT_STATUS)."
+  echo "Please try again later."
   exit 2
 fi
 
