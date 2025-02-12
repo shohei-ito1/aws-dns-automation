@@ -41,3 +41,63 @@ echo "==========================="
 echo "以下のNSレコードを管理者に設定依頼してください:"
 echo "${DOMAIN}.  IN  NS  $NS_RECORDS"
 echo "==========================="
+
+
+
+# ===============================
+# 親ドメイン (Z104432328G24Z3B7DMOB) にサブドメインのNSレコードを追加
+# ===============================
+
+PARENT_HOSTED_ZONE_ID="Z104432328G24Z3B7DMOB"
+
+# NS レコードを整形
+NS_RECORDS_JSON=$(echo "$NS_RECORDS" | jq -c '[.[] | { "Value": . }]')
+
+echo "Adding NS records to parent domain's hosted zone..."
+aws route53 change-resource-record-sets --hosted-zone-id "$PARENT_HOSTED_ZONE_ID" --change-batch "{
+  \"Changes\": [
+    {
+      \"Action\": \"UPSERT\",
+      \"ResourceRecordSet\": {
+        \"Name\": \"$DOMAIN.\",
+        \"Type\": \"NS\",
+        \"TTL\": 300,
+        \"ResourceRecords\": $NS_RECORDS_JSON
+      }
+    }
+  ]
+}"
+
+if [ $? -eq 0 ]; then
+  echo "Successfully added NS records for $DOMAIN to parent hosted zone ($PARENT_HOSTED_ZONE_ID)."
+else
+  echo "Error: Failed to add NS records to parent hosted zone."
+  exit 1
+fi
+
+# ===============================
+# 親ドメイン (Z104432328G24Z3B7DMOB) にサブドメインのNSレコードを追加（AWS Route 53 の場合）
+# ===============================
+
+PARENT_HOSTED_ZONE_ID="Z104432328G24Z3B7DMOB"
+
+# NS レコードを整形
+NS_RECORDS_JSON=$(echo "$NS_RECORDS" | jq -c '[.[] | { "Value": . }]')
+
+echo "==============================="
+echo "Route 53 の場合、以下のコマンドを実行してください:"
+echo "aws route53 change-resource-record-sets --hosted-zone-id \"$PARENT_HOSTED_ZONE_ID\" --change-batch '{
+  \"Changes\": [
+    {
+      \"Action\": \"UPSERT\",
+      \"ResourceRecordSet\": {
+        \"Name\": \"$DOMAIN.\",
+        \"Type\": \"NS\",
+        \"TTL\": 300,
+        \"ResourceRecords\": $NS_RECORDS_JSON
+      }
+    }
+  ]
+}'"
+echo "==============================="
+
