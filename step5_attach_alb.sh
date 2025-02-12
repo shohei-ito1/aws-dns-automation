@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===============================
-# Attach SSL Certificate to Existing ALB & Add A Record to Route 53
+# Attach New SSL Certificate to ALB & Preserve Existing Certificates
 # ===============================
 
 DOMAIN=$1
@@ -70,17 +70,32 @@ fi
 
 echo "Using existing HTTPS Listener ARN: $LISTENER_ARN"
 
-# Attach SSL Certificate to HTTPS Listener
-echo "Applying SSL Certificate to ALB HTTPS Listener..."
-aws elbv2 modify-listener --listener-arn "$LISTENER_ARN" --certificates "CertificateArn=$CERT_ARN" --region "$AWS_REGION"
+# Retrieve Existing Certificates
+echo "Retrieving existing certificates on the ALB listener..."
+EXISTING_CERTS=$(aws elbv2 describe-listener-certificates --listener-arn "$LISTENER_ARN" --region "$AWS_REGION" --query "Certificates[*].CertificateArn" --output json)
 
-echo "SSL Certificate applied successfully."
+if [ -z "$EXISTING_CERTS" ]; then
+  echo "No existing certificates found, adding the first certificate."
+else
+  echo "Existing Certificates: $EXISTING_CERTS"
+fi
+
+# Add New SSL Certificate Without Removing Existing Ones
+echo "Attaching new SSL certificate while preserving existing ones..."
+aws elbv2 add-listener-certificates --listener-arn "$LISTENER_ARN" --certificates CertificateArn="$CERT_ARN" --region "$AWS_REGION"
+
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to attach SSL certificate to ALB listener."
+  exit 1
+fi
+
+echo "New SSL Certificate attached successfully using SNI."
 
 # Add A Record to Route 53
 echo "Adding ALB A record to Route 53..."
 aws route53 change-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --region "$AWS_REGION" --change-batch "{
   \"Changes\": [{
-    \"Action\": \"CREATE\",
+    \"Action\": \"UPSERT\",
     \"ResourceRecordSet\": {
       \"Name\": \"$DOMAIN\",
       \"Type\": \"A\",
