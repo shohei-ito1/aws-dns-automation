@@ -65,3 +65,11 @@ Email-related DNS changes (Step 6) may take time to propagate.
   - The **number of SAN certificates that can be attached to an ALB via SNI**.
   - The total manageable domains is determined by the product of these two constraints.
 
+
+## Useful Commands
+
+```bash
+
+dig NS dev-hinode-labo.com +short|sort
+
+```
